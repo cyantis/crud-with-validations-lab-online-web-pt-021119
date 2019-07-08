@@ -1,16 +1,19 @@
 class Song < ActiveRecord::Base
   validates :title, presence: true
+  validates :title, uniqueness: {
+    :scope => [:release_year, :artist_name],
+    message: 'already logged'}
   validates :released, inclusion: { in: [ true, false ] }
-  validates :release_year, presence: true, if: :released?
   validates :artist_name, presence: true
-  #validate :song_uniq
+
+  with_options if: :released? do |s|
+    s.validates :release_year, presence: true
+    s.validates :release_year, numericality: {
+      less_than_or_equal_to: Date.today.year
+    }
+  end
 
   def released?
     released
   end
-
-  #def song_uniq
-  #  song = Song.find(params[:title])
-  #  errors.add(:title, "You've alread entered this song.") if song.title == title && song.artist == artist && song.release_year == release_year
-  #end
 end
